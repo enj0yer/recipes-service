@@ -90,7 +90,7 @@ password_input.addEventListener("input", (ev) => {
         deleteHTMLError("password-error", ev.target);
     }
     else {
-        addHTMLError("password-error", `Неверный формат пароля ${ev.target.value}. Пароль должен содержать от 8 до 64 символов и содержать только A-Z a-z 0-9 _ -`, ev.target);
+        addHTMLError("password-error", `Неверный формат пароля. Пароль должен содержать от 8 до 64 символов и содержать только A-Z a-z 0-9 _ -`, ev.target);
     }
 });
 
