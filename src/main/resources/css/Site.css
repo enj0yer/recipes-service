@@ -16,7 +16,7 @@ a:hover{
     justify-content: space-between;
 }
 #search-field{
-    width: 1000px;
+    width: 50%;
     font-size: 20pt;
     height: 50px;
 }
@@ -36,8 +36,8 @@ a:hover{
 }
 #search-container{
     display: flex;
-    width: 1050px;
-    justify-content: space-between;
+    width: calc(60vw + 50px);
+    justify-content: center;
 }
 #content-container{
     display: flex;
