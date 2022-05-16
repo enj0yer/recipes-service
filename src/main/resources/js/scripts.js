@@ -29,6 +29,8 @@ let form = document.getElementById("search-form");
                             <br>
                             <div class="recipe-short-description">${data.previewText}
                             </div>
+                            ${data.recipe}
+                            ${data.description}
                         </a>
                         <br>
                         <div class="recipe-likes-container" onclick="like(this)" id="recipe_likes_container_${i}">
@@ -42,6 +44,7 @@ let form = document.getElementById("search-form");
                                 </svg></div>`}</div></div>
                             `;
                         container.append(element);
+                        appendClassNames(element.querySelectorAll("p"));
                     }
                 }
                 else{
@@ -117,4 +120,16 @@ function like(el){
         let recipe_name = document.getElementById(`recipe_name_${parsed_id}`).innerHTML;
         incrementLike(recipe_name, `recipe_likes_counter_${parsed_id}`);
     }
+}
+
+function appendClassNames(elements){
+    const attributes = ["recipe-text-header", "recipe-text", "recipe-steps-header", "recipe-steps"];
+
+    attributes.forEach(el => {
+        for (let element of elements){
+            if (element.hasAttribute(el)){
+                element.classList.add(el);
+            }
+        }
+    });
 }
