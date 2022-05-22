@@ -31,6 +31,9 @@ public class User {
     @Column(nullable = false)
     protected String password;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    protected boolean isAdmin;
+
 
     public User(String username, String email, String phoneNumber, String gender, Integer age, String password) {
         this.username = username;
@@ -100,4 +103,11 @@ public class User {
         this.phoneNumber = phoneNumber;
     }
 
+    public boolean isAdmin() {
+        return isAdmin;
+    }
+
+    public void setAdmin(boolean admin) {
+        isAdmin = admin;
+    }
 }

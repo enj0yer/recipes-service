@@ -17,20 +17,17 @@
                 </div>
             </form>
         </div>
-        <a id="profile-link"><div id="username" class="div-btn">Username</div></a>
+        <a id="main-link"><div id="username" class="div-btn">Вернуться на главную</div></a>
    </header>
-   <div class="flex-panel">
-        <a id="add-recipe-link"><div class="action-panel-btn btn btn-primary">Добавление рецепта</div></a>
-        <a id="liked-link"><div class="action-panel-btn btn btn-primary">Понравившееся</div></a>
-        <a id="best-link"><div class="action-panel-btn btn btn-primary">Лучшее</div></a>
-   </div>
 
-   <div th:if="${isAdmin}" class="flex-panel">
-       <a id="moderate-link"><div class="btn btn-primary admin-panel-btn">Модерация рецептов</div></a>
-       <a id="users-link"><div class="btn btn-primary admin-panel-btn">Список пользователей</div></a>
-   </div>
-
-<div id="content-container"></div>
+<h2>Список рецептов</h2>
+<select name="sortBy" id="sortBy">
+    <option name="sortBy" value="views" selected>Самые просматриваемые</option>
+    <option name="sortBy" value="likes">Самые лайкнутые</option>
+    <option name="sortBy" value="comments">Самые комментируемые</option>
+</select>
+<input type="button" id="loadBest" onclick="loadBest()" value="Загрузить">
+<table id="content-table" class="table"></table>
 
 <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>

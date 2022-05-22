@@ -13,10 +13,22 @@ public class Recipe {
     protected String name;
 
     @Column(nullable = false)
+    protected String creatorName;
+
+    @Column(nullable = false)
     protected String tags;
 
     @Column(nullable = false)
+    protected String ingredients;
+
+    @Column(nullable = false)
     protected Integer likes;
+
+    @Column(nullable = false)
+    protected Integer views;
+
+    @Column(nullable = false)
+    protected Integer comments;
 
     @Column(nullable = false, length = 20000)
     protected String data;

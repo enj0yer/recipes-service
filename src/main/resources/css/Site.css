@@ -99,3 +99,18 @@ a:hover{
     margin: 10px auto;
     text-align: center;
 }
+
+.flex-panel{
+    display: flex;
+    width: 1000px;
+    justify-content: space-between;
+}
+.action-panel-btn, .admin-panel-btn{
+    width: 200px;
+    padding: 10px;
+}
+
+.settings-container{
+    display: grid;
+    grid-template-columns: ;
+}

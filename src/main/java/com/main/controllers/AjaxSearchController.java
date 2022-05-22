@@ -94,4 +94,16 @@ public class AjaxSearchController {
         return ajaxResponse;
     }
 
+    @PostMapping(value = "/best")
+    @Transactional
+    public AjaxResponse loadBest(@RequestParam("sortBy") String sortBy){
+        AjaxResponse ajaxResponse = new AjaxResponse();
+        List<Recipe> recipes = recipeRepository.findAllSortBy(sortBy);
+
+        ajaxResponse.setStatus("SUCCESS");
+        ajaxResponse.setResult(recipes);
+
+        return ajaxResponse;
+    }
+
 }

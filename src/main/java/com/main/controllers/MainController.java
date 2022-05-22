@@ -22,15 +22,17 @@ public class MainController {
     private SessionRepository sessionRepository;
 
     @GetMapping("/main")
-    public ModelAndView main(@RequestParam(required = false, name = "token") String token
-            /*@RequestParam(required = false, name = "isAuth") String isAuth*/) {
+    public ModelAndView main(@RequestParam(required = false, name = "token") String token) {
         ModelAndView modelAndView = new ModelAndView();
         if (token == null) {
             modelAndView.setViewName("redirect:/login");
         } else {
             Session session = sessionRepository.findByToken(token);
             if (session != null) {
+                Boolean isAdmin = userRepository.findByUsername(session.getUsername()).isAdmin();
                 modelAndView.addObject("username", session.getUsername());
+                modelAndView.addObject("token", session.getToken());
+                modelAndView.addObject("isAdmin", isAdmin);
                 modelAndView.setViewName("main");
             } else {
                 modelAndView.setViewName("redirect:/login");
@@ -38,4 +40,52 @@ public class MainController {
         }
         return modelAndView;
     }
+
+    @GetMapping("/main/profile")
+    public ModelAndView profile(@RequestParam(required = false, name = "token") String token){
+        ModelAndView modelAndView = new ModelAndView();
+        if (token == null){
+            modelAndView.setViewName("redirect:/login");
+        }
+        else{
+            Session session = sessionRepository.findByToken(token);
+
+            if (session != null){
+                Boolean isAdmin = userRepository.findByUsername(session.getUsername()).isAdmin();
+                modelAndView.addObject("username", session.getUsername());
+                modelAndView.addObject("token", session.getToken());
+                modelAndView.addObject("isAdmin", isAdmin);
+                modelAndView.setViewName("profile");
+            }
+            else{
+                modelAndView.setViewName("redirect:/login");
+            }
+        }
+        return modelAndView;
+    }
+
+    @GetMapping("/main/")
+    public ModelAndView newRecipe(@RequestParam(required = false, name = "token") String token){
+        ModelAndView modelAndView = new ModelAndView();
+        if (token == null){
+            modelAndView.setViewName("redirect:/login");
+        }
+        else{
+            Session session = sessionRepository.findByToken(token);
+
+            if (session != null){
+                Boolean isAdmin = userRepository.findByUsername(session.getUsername()).isAdmin();
+                modelAndView.addObject("username", session.getUsername());
+                modelAndView.addObject("token", session.getToken());
+                modelAndView.addObject("isAdmin", isAdmin);
+                modelAndView.setViewName("profile");
+            }
+            else{
+                modelAndView.setViewName("redirect:/login");
+            }
+        }
+        return modelAndView;
+    }
+
+
 }

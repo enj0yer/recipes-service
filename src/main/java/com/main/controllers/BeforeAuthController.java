@@ -87,6 +87,7 @@ public class BeforeAuthController {
             else{
                 token = currSession.getToken();
             }
+            User user = userRepository.findByUsername(username);
             modelAndView.addObject("token", token);
             modelAndView.setViewName("redirect:/main");
 
