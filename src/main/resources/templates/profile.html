@@ -22,6 +22,7 @@
         <label for="">Новое фото профиля</label>
         <input type="file" class="form-control" id="newPhoto" placeholder="Прикрепить">
     </div>
+    <div class="btn btn-danger" onclick="logout()">Выйти из аккаунта</div>
 </div>
 
 
@@ -37,6 +38,22 @@
     }
     function getToken(){
         return [[${token}]];
+    }
+
+    function logout(){
+        $.ajax({
+            type: "post",
+            url: "/logout",
+            data: "token=" + getToken(),
+            success: function (response){
+                if (response.status === "SUCCESS"){
+                    window.location.href = "/";
+                }
+            },
+            error: function (e){
+                console.log(e);
+            }
+        });
     }
 </script>
 <script src="/js/scripts.js"></script>

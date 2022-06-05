@@ -9,20 +9,11 @@
 <body>
    <header id="header">
         <div id="service-name" class="div-btn">Recipes</div>
-        <div id="form-container">
-            <form method="post" id="search-form">
-                <div id="search-container">
-                    <input type="text" id="search-field" class="form-control" name="search" placeholder="Искать рецепты">
-                    <input type="submit" class="btn btn-primary" value="🔍">
-                </div>
-            </form>
-        </div>
-        <a href=""><div id="username" class="div-btn">Username</div></a>
+        
+        <a id="recipe-back-link"><div class="div-btn">Вернуться назад</div></a>
    </header>
 
-<div id="content-container">
-    
-</div>
+   <div id="recipe-container"></div>
 
 <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
@@ -31,9 +22,51 @@
     function getUsername(){
         return [[${username}]];    
     }
-    function getRecipe(){
-        return [[${recipe}]]
+    function getToken(){
+        return [[${token}]];
     }
+    function isAdmin(){
+        return [[${isAdmin}]];
+    }
+    function getRecipeName(){
+        return [[${recipeName}]];
+    }
+
+    function cameFrom(){
+        return [[${from}]];
+    }
+
+    $.ajax({
+        type: "post",
+        url: "/loadRecipe",
+        data: "recipeName=" + getRecipeName(),
+        success: function (response){
+            let container = document.getElementById("recipe-container");
+            if (response.status === "SUCCESS"){
+                let recipe = response.result;
+                let data = JSON.parse(recipe.data);
+                container.innerHTML = "";
+                container.innerHTML += `
+                    <img src="../img/${data.imageName}"><br>
+                    <h1>${recipe.name}</h1><br>
+                    <h3>${recipe.creatorName}</h3><br>
+                    <div style="display: flex; width: 700px; justify-content: space-between">
+                        <p style="width:max-content">Просмотры - ${recipe.views}</p>
+                        <p style="width:max-content">Лайки - ${recipe.likes}</p>
+                        <p style="width:max-content">Комментарии - ${recipe.comments}</p>
+                    </div>
+                    ${data.recipe}
+                    ${data.description}
+                `;
+            }
+            else{
+                container.innerHTML = `Не удалось загрузить рецепт "${getRecipeName()}"`;
+            }
+        },
+        error: function (e){
+            console.log(e);
+        }
+    });
 </script>
 <script src="/js/scripts.js"></script>
 </body>

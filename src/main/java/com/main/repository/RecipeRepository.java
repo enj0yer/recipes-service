@@ -21,6 +21,15 @@ public interface RecipeRepository extends JpaRepository<Recipe, Integer>{
     @Procedure("decrement_recipe_likes")
     void decrementRecipeLikes(Integer id);
 
-    @Query("from recipes order by ?1 asc")
-    List<Recipe> findAllSortBy(String sortBy);
+    @Query("from recipes order by likes desc")
+    List<Recipe> findAllSortByLikes();
+
+    @Query("from recipes order by views desc")
+    List<Recipe> findAllSortByViews();
+
+    @Query("from recipes order by comments desc")
+    List<Recipe> findAllSortByComments();
+
+    @Procedure("increase_views")
+    void increaseViews(Integer id);
 }

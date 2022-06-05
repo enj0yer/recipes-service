@@ -35,10 +35,14 @@ public class Recipe {
 
     public Recipe() {}
 
-    public Recipe(String name, String tags, Integer likes, String data) {
+    public Recipe(String name, String creatorName, String tags, String ingredients, Integer likes, Integer views, Integer comments, String data) {
         this.name = name;
+        this.creatorName = creatorName;
         this.tags = tags;
+        this.ingredients = ingredients;
         this.likes = likes;
+        this.views = views;
+        this.comments = comments;
         this.data = data;
     }
 
@@ -80,5 +84,37 @@ public class Recipe {
 
     public void setLikes(Integer likes) {
         this.likes = likes;
+    }
+
+    public String getCreatorName() {
+        return creatorName;
+    }
+
+    public void setCreatorName(String creatorName) {
+        this.creatorName = creatorName;
+    }
+
+    public String getIngredients() {
+        return ingredients;
+    }
+
+    public void setIngredients(String ingredients) {
+        this.ingredients = ingredients;
+    }
+
+    public Integer getViews() {
+        return views;
+    }
+
+    public void setViews(Integer views) {
+        this.views = views;
+    }
+
+    public Integer getComments() {
+        return comments;
+    }
+
+    public void setComments(Integer comments) {
+        this.comments = comments;
     }
 }

@@ -40,11 +40,12 @@ a:hover{
     justify-content: center;
 }
 #content-container{
-    display: flex;
-    justify-items: start;
-    flex-wrap: wrap;
+    display: grid;
+    /* justify-items: start; */
+    /* flex-wrap: wrap; */
+    grid-template-columns: 1fr 1fr 1fr;
     width: 1020px;
-    justify-content: left;
+    /* justify-content: left; */
     margin: 0 auto;
 }
 .recipe-card{
@@ -52,8 +53,12 @@ a:hover{
     height: max-content;
     padding: 10px;
     margin: 10px;
-    background-color: #bfdeff;
     border-radius: 6px;
+    transition: all 0.2s ease-in;
+}
+.recipe-card:hover{
+    background-color: #bfdeff;
+    transition: all 0.2s ease-in;
 }
 .recipe-name{
     width: max-content;
@@ -113,4 +118,9 @@ a:hover{
 .settings-container{
     display: grid;
     grid-template-columns: ;
+}
+
+.recipe-footer{
+    display: flex;
+    justify-content: space-between;
 }

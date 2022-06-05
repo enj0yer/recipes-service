@@ -7,6 +7,7 @@ import com.main.models.Recipe;
 import com.main.models.User;
 import com.main.repository.LikeRepository;
 import com.main.repository.RecipeRepository;
+import com.main.repository.SessionRepository;
 import com.main.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,8 @@ public class AjaxSearchController {
     private RecipeRepository recipeRepository;
     @Autowired
     private LikeRepository likeRepository;
+    @Autowired
+    private SessionRepository sessionRepository;
 
     private Boolean searchLike(List<Like> likes, int userId, int recipeId){
         for (var like : likes){
@@ -37,7 +40,8 @@ public class AjaxSearchController {
     }
 
     @PostMapping(value = "/main")
-    public AjaxResponse displayRecipes(@RequestParam("username") String username, @RequestParam(name = "search") String search) {
+    public AjaxResponse displayRecipes(@RequestParam("username") String username,
+                                       @RequestParam(name = "search") String search) {
         AjaxResponse ajaxResponse = new AjaxResponse();
         if (search.length() > 64){
             ajaxResponse.setStatus("FAIL");
@@ -69,7 +73,8 @@ public class AjaxSearchController {
 
     @PostMapping(value = "/likeInc")
     @Transactional
-    public AjaxResponse incrementLike(@RequestParam("name") String recipe_name, @RequestParam("username") String username){
+    public AjaxResponse incrementLike(@RequestParam("name") String recipe_name,
+                                      @RequestParam("username") String username){
         AjaxResponse ajaxResponse = new AjaxResponse();
         User user = userRepository.findByUsername(username);
         Recipe recipe = recipeRepository.findByName(recipe_name);
@@ -82,7 +87,8 @@ public class AjaxSearchController {
 
     @PostMapping(value = "/likeDec")
     @Transactional
-    public AjaxResponse decrementLike(@RequestParam("name") String recipe_name, @RequestParam("username") String username){
+    public AjaxResponse decrementLike(@RequestParam("name") String recipe_name,
+                                      @RequestParam("username") String username){
         AjaxResponse ajaxResponse = new AjaxResponse();
         User user = userRepository.findByUsername(username);
         Recipe recipe = recipeRepository.findByName(recipe_name);
@@ -98,12 +104,98 @@ public class AjaxSearchController {
     @Transactional
     public AjaxResponse loadBest(@RequestParam("sortBy") String sortBy){
         AjaxResponse ajaxResponse = new AjaxResponse();
-        List<Recipe> recipes = recipeRepository.findAllSortBy(sortBy);
-
+        List<Recipe> recipes;
+        switch (sortBy){
+            case "likes":
+                recipes = recipeRepository.findAllSortByLikes();
+                break;
+            case "comments":
+                recipes = recipeRepository.findAllSortByComments();
+                break;
+            case "views":
+                recipes = recipeRepository.findAllSortByViews();
+                break;
+            default:
+                ajaxResponse.setStatus("FAIL");
+                return ajaxResponse;
+        }
         ajaxResponse.setStatus("SUCCESS");
         ajaxResponse.setResult(recipes);
 
         return ajaxResponse;
     }
 
+    @PostMapping("/loadRecipe")
+    public AjaxResponse loadRecipe(@RequestParam("recipeName") String recipeName){
+        AjaxResponse ajaxResponse = new AjaxResponse();
+
+        Recipe recipe = recipeRepository.findByName(recipeName);
+
+        if (recipe == null){
+            ajaxResponse.setStatus("FAIL");
+        }
+        else{
+            ajaxResponse.setStatus("SUCCESS");
+            ajaxResponse.setResult(recipe);
+        }
+
+        return ajaxResponse;
+    }
+
+    @PostMapping("/logout")
+    public AjaxResponse logout(@RequestParam("token") String token){
+        AjaxResponse ajaxResponse = new AjaxResponse();
+
+        if (token == null){
+            ajaxResponse.setStatus("FAIL");
+        }
+        else{
+            sessionRepository.deleteSession(token);
+            ajaxResponse.setStatus("SUCCESS");
+        }
+
+        return ajaxResponse;
+    }
+
+    @PostMapping("/loadLiked")
+    public AjaxResponse loadLiked(@RequestParam("sortBy") String sortBy,
+                                  @RequestParam("username") String username){
+        AjaxResponse ajaxResponse = new AjaxResponse();
+
+        if (username == null){
+            ajaxResponse.setStatus("FAIL");
+            return ajaxResponse;
+        }
+        List<Recipe> recipes;
+        switch (sortBy){
+            case "likes":
+                recipes = recipeRepository.findAllSortByLikes();
+                break;
+            case "comments":
+                recipes = recipeRepository.findAllSortByComments();
+                break;
+            case "views":
+                recipes = recipeRepository.findAllSortByViews();
+                break;
+            default:
+                ajaxResponse.setStatus("FAIL");
+                return ajaxResponse;
+        }
+
+        User user = userRepository.findByUsername(username);
+
+        List<Like> likes = likeRepository.findByUserId(user.getId());
+
+        List<LikedRecipe> likedRecipes = new ArrayList<>();
+
+        for (var recipe : recipes){
+            if (searchLike(likes, user.getId(), recipe.getId())){
+                likedRecipes.add(new LikedRecipe(recipe, true));
+            }
+        }
+        ajaxResponse.setStatus("SUCCESS");
+        ajaxResponse.setResult(likedRecipes);
+
+        return ajaxResponse;
+    }
 }

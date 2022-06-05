@@ -1,12 +1,15 @@
 package com.main.controllers;
 
 import com.main.AjaxResponse;
+import com.main.models.Recipe;
 import com.main.models.Session;
 import com.main.models.User;
+import com.main.repository.RecipeRepository;
 import com.main.repository.SessionRepository;
 import com.main.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
@@ -20,6 +23,9 @@ public class MainController {
 
     @Autowired
     private SessionRepository sessionRepository;
+
+    @Autowired
+    private RecipeRepository recipeRepository;
 
     @GetMapping("/main")
     public ModelAndView main(@RequestParam(required = false, name = "token") String token) {
@@ -64,7 +70,7 @@ public class MainController {
         return modelAndView;
     }
 
-    @GetMapping("/main/")
+    @GetMapping("/main/newRecipe")
     public ModelAndView newRecipe(@RequestParam(required = false, name = "token") String token){
         ModelAndView modelAndView = new ModelAndView();
         if (token == null){
@@ -78,7 +84,7 @@ public class MainController {
                 modelAndView.addObject("username", session.getUsername());
                 modelAndView.addObject("token", session.getToken());
                 modelAndView.addObject("isAdmin", isAdmin);
-                modelAndView.setViewName("profile");
+                modelAndView.setViewName("newRecipe");
             }
             else{
                 modelAndView.setViewName("redirect:/login");
@@ -87,5 +93,103 @@ public class MainController {
         return modelAndView;
     }
 
+    @GetMapping("/main/liked")
+    public ModelAndView liked(@RequestParam(required = false, name = "token") String token){
+        ModelAndView modelAndView = new ModelAndView();
+        if (token == null){
+            modelAndView.setViewName("redirect:/login");
+        }
+        else{
+            Session session = sessionRepository.findByToken(token);
 
+            if (session != null){
+                Boolean isAdmin = userRepository.findByUsername(session.getUsername()).isAdmin();
+                modelAndView.addObject("username", session.getUsername());
+                modelAndView.addObject("token", session.getToken());
+                modelAndView.addObject("isAdmin", isAdmin);
+                modelAndView.setViewName("liked");
+            }
+            else{
+                modelAndView.setViewName("redirect:/login");
+            }
+        }
+        return modelAndView;
+    }
+
+    @GetMapping("/best")
+    @Transactional
+    public ModelAndView best(@RequestParam(required = false, name = "token") String token){
+        ModelAndView modelAndView = new ModelAndView("best");
+        if (token != null){
+            Session session = sessionRepository.findByToken(token);
+
+            if (session != null){
+                Boolean isAdmin = userRepository.findByUsername(session.getUsername()).isAdmin();
+                modelAndView.addObject("username", session.getUsername());
+                modelAndView.addObject("token", session.getToken());
+                modelAndView.addObject("isAdmin", isAdmin);
+            }
+        }
+        return modelAndView;
+    }
+
+    @GetMapping("/recipe")
+    public ModelAndView recipe(@RequestParam(required = false, name = "token") String token,
+                               @RequestParam(required = false, name = "recipeName") String recipeName,
+                               @RequestParam(required = false, name = "from") String from){
+        ModelAndView modelAndView = new ModelAndView();
+
+        Recipe recipe = recipeRepository.findByName(recipeName);
+
+        if (recipe == null){
+            if (token == null){
+                modelAndView.setViewName("redirect:/");
+            }
+            else {
+                modelAndView.setViewName("redirect:/main?token=" + token);
+            }
+            return modelAndView;
+        }
+        else{
+            recipeRepository.increaseViews(recipe.getId());
+            modelAndView.addObject("recipeName", recipeName);
+            modelAndView.addObject("from", from);
+        }
+
+        if (token != null){
+            Session session = sessionRepository.findByToken(token);
+
+            if (session != null){
+                Boolean isAdmin = userRepository.findByUsername(session.getUsername()).isAdmin();
+                modelAndView.addObject("username", session.getUsername());
+                modelAndView.addObject("token", session.getToken());
+                modelAndView.addObject("isAdmin", isAdmin);
+            }
+        }
+        return modelAndView;
+    }
+
+    @GetMapping
+    public ModelAndView userList(@RequestParam(required = false, name = "token") String token){
+        ModelAndView modelAndView = new ModelAndView("best");
+        if (token != null){
+            Session session = sessionRepository.findByToken(token);
+
+            if (session != null){
+                Boolean isAdmin = userRepository.findByUsername(session.getUsername()).isAdmin();
+
+                modelAndView.addObject("username", session.getUsername());
+                modelAndView.addObject("token", session.getToken());
+                modelAndView.addObject("isAdmin", isAdmin);
+
+                if (isAdmin == false){
+                    modelAndView.setViewName("redirect:/main?token=" + token);
+                }
+            }
+            else{
+                modelAndView.setViewName("redirect:/login");
+            }
+        }
+        return modelAndView;
+    }
 }

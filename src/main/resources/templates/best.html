@@ -9,15 +9,8 @@
 <body>
    <header id="header">
         <div id="service-name" class="div-btn">Recipes</div>
-        <div id="form-container">
-            <form method="post" id="search-form">
-                <div id="search-container">
-                    <input type="text" id="search-field" class="form-control" name="search" placeholder="Искать рецепты">
-                    <input type="submit" class="btn btn-primary" value="🔍">
-                </div>
-            </form>
-        </div>
-        <a id="main-link"><div id="username" class="div-btn">Вернуться на главную</div></a>
+       
+        <a id="main-link"><div class="div-btn">Вернуться на главную</div></a>
    </header>
 
 <h2>Список рецептов</h2>
@@ -40,7 +33,7 @@
         return [[${isAdmin}]];
     }
     function getToken(){
-        return [[${token}]]
+        return [[${token}]];
     }
 </script>
 <script src="/js/scripts.js"></script>
