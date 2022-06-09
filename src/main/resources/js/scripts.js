@@ -278,8 +278,10 @@ function addTagInput(){
 
     if (container.innerHTML === ""){
         container.innerHTML = `<div id="tag-block_0">
-                                   <input type="text" placeholder="Тег рецепта" id="tag-block-text_0">
-                                   <input type="button" value="X" class="btn btn-danger" id="tag-block-del_0" onclick="deleteTagField(this)">
+                                   <div class="input-group mb-3">
+                                   <input type="text" placeholder="Тег рецепта"  class="tag-field form-control" id="tag-block-text_0">
+                                   <div class="input-group-append">
+                                   <input type="button" style="margin: 0;" value="X" class="btn btn-danger" id="tag-block-del_0" onclick="deleteTagInput(this)"></div></div>
                                </div>`
     }
     else{
@@ -293,20 +295,97 @@ function addTagInput(){
             }
         }
         if (free_id == -1){
-            createToast("Превышен лимит на кол-во тегов");
+            createToast("Превышен лимит на кол-во тегов", "red");
             return;
         }
         let element = document.createElement("div");
         element.id = `tag-block_${free_id}`;
-        element.innerHTML = `<input type="text" placeholder="Тег рецепта" id="tag-block-text_${free_id}">
-        <input type="button" class="btn btn-danger" value="X" id="tag-block-del_${free_id}" onclick="deleteTagField(this)">`
+        element.innerHTML = `<div class="input-group mb-3"><input type="text" placeholder="Тег рецепта" class="tag-field form-control" id="tag-block-text_${free_id}">
+        <div class="input-group-append"><input type="button" class="btn btn-danger" value="X" style="margin: 0;" id="tag-block-del_${free_id}" onclick="deleteTagInput(this)"></div></div>`
         container.append(element);
     }
 }
 
-function deleteTagField(element){
+function deleteTagInput(element){
     let id = element.id.split('_')[1];
     document.getElementById(`tag-block_${id}`).remove();
+}
+
+function addIngInput(){
+    let container = document.getElementById("ings-container");
+
+    if (container.innerHTML === ""){
+        container.innerHTML = `<div id="ing-block_0" class="ing-block">
+                                   <div class="input-group mb-3">
+                                        <div class="input-group-prepend"><span class="input-group-text">Ингредиент</span></div>
+                                        <input type="text" class="ing-name form-control" placeholder="Название" id="ing-block-text_0">
+                                        <input type="text" class="ing-amount form-control" placeholder="Кол-во">
+                                        <input type="button" value="X" class="btn btn-danger" style="margin: 0;" id="ing-block-del_0" onclick="deleteIngInput(this)">
+                                    </div>
+                               </div>`
+    }
+    else{
+        let child_array = Array.from(container.children);
+        let children_id = child_array.map((el) => Number(el.id.split("_")[1]));
+        let free_id = -1
+        for (let id = 0; id < 100; id++){
+            if (children_id.includes(id) === false){
+                free_id = id;
+                break;
+            }
+        }
+        if (free_id == -1){
+            createToast("Превышен лимит на кол-во тегов", "red");
+            return;
+        }
+        let element = document.createElement("div");
+        element.className = "ing-block";
+        element.id = `ing-block_${free_id}`;
+        element.innerHTML = `<div class="input-group mb-3">
+        <div class="input-group-prepend"><span class="input-group-text">Ингредиент</span></div>
+        <input type="text" class="ing-name form-control" placeholder="Название" id="ing-block-text_${free_id}">
+        <input type="text" class="ing-amount form-control" placeholder="Кол-во">
+        <input type="button" class="btn btn-danger" style="margin: 0;" value="X" id="ing-block-del_${free_id}" onclick="deleteIngInput(this)">
+        </div>`
+        container.append(element);
+    }
+}
+
+function deleteIngInput(element){
+    let id = element.id.split('_')[1];
+    document.getElementById(`ing-block_${id}`).remove();
+}
+
+function createRecipe(){
+    let name = document.getElementById("new-recipe-name").value;
+
+    let short_desc = document.getElementById("short-description").value;
+
+    let tags_fields = document.querySelectorAll(".tag-field");
+    let tags = Array.from(tags_fields).map(el => el.value);
+
+    let ings_names_fields = document.querySelectorAll(".ing-name");
+    let ings_names = Array.from(ings_names_fields).map(el => el.value);
+
+    let ings_amounts_fields = document.querySelectorAll(".ing-amount");
+    let ings_amounts = Array.from(ings_amounts_fields).map(el => el.value);
+
+    let description = document.getElementById("description").value;
+
+    let photo = document.getElementById("new-recipe-image").files[0];
+
+    if (name === "" || short_desc === "" || description === "" || photo.value !== undefined || tags.includes("") || ings_names.includes("") || ings_amounts.includes("")){
+        createToast("Необходимо заполнить все поля", "red");
+        return;
+    }
+
+    let ings = new Map();
+
+    for (let i = 0; i < ings_names.length; i++){
+        ings.set(ings_names[i], ings_amounts[i]);
+    }
+
+    console.log(name, tags, ings, description, photo);
 }
 
 function createToast(message, color="yellow") {

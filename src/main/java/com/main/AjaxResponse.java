@@ -5,6 +5,13 @@ public class AjaxResponse {
     private String status;
     private Object result;
 
+    public AjaxResponse(String status, Object result){
+        this.status = status;
+        this.result = result;
+    }
+
+    public AjaxResponse(){}
+
     public String getStatus() {
         return status;
     }

@@ -1,10 +1,7 @@
 package com.main.controllers;
 
 import com.main.AjaxResponse;
-import com.main.models.Like;
-import com.main.models.LikedRecipe;
-import com.main.models.Recipe;
-import com.main.models.User;
+import com.main.models.*;
 import com.main.repository.LikeRepository;
 import com.main.repository.RecipeRepository;
 import com.main.repository.SessionRepository;
@@ -19,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-public class AjaxSearchController {
+public class AjaxController {
 
     @Autowired
     private UserRepository userRepository;
@@ -198,4 +195,16 @@ public class AjaxSearchController {
 
         return ajaxResponse;
     }
+
+
+//    @PostMapping("/createRecipe")
+//    public AjaxResponse createRecipe(UserRecipe userRecipe){
+//        if (recipeRepository.findByName(userRecipe.getName()) != null){
+//            return new AjaxResponse("FAIL", "Рецепт с таким именем уже существует");
+//        }
+//
+//        userRecipe.getRecipeImage().
+//
+//
+//    }
 }

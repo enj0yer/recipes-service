@@ -124,3 +124,31 @@ a:hover{
     display: flex;
     justify-content: space-between;
 }
+
+.new-recipe-container{
+    width: 800px;
+}
+.new-recipe-container > div{
+    padding: 20px;
+    margin: 10px auto;
+    border: 2px rgb(183, 183, 183) solid;
+    border-radius: 3px;
+}
+.inner-new-recipe-container{
+    width: max-content;
+}
+.new-recipe-image-container{
+    grid-template-columns: 2fr;
+}
+
+.inputs-container{
+    margin: 10px;
+}
+
+.alert{
+    margin-top: 10px;
+}
+
+.btn{
+    margin-top: 10px;
+}

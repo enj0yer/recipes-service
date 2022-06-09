@@ -13,10 +13,36 @@
     <a id="main-link"><div id="main-redirect" class="div-btn">Вернуться на главную</div></a>
 </header>
 
-<div class="container">
-    <input type="text" placeholder="Имя рецепта" id="name" name="name" class="form-control">
-    <div id="tags-container"></div>
-    <input type="button" value="Добавить поле для тега" onclick="addTagInput()" class="btn btn-primary">
+<div class="container new-recipe-container">
+    <div>
+        <input type="text" placeholder="Назвение рецепта" id="new-recipe-name" name="name" class="form-control">
+        <div class="alert alert-warning">Название должно быть уникальным</div>
+    </div>
+    <div>
+        <input type="text" placeholder="Краткое описание" id="short-description" class="form-control">
+        <div class="alert alert-primary">1-2 коротких предложения, описывающих рецепт</div>
+    </div>
+    <div>
+        <input type="button" value="Добавить поле для тега" onclick="addTagInput()" class="btn btn-warning">
+        <div id="tags-container" class="inputs-container"></div>
+        <div class="alert alert-warning">Пожалуйста, указывайте подходящие теги</div>
+    </div>
+    <div>
+        <input type="button" value="Добавить поле для ингредиентов" onclick="addIngInput()" class="btn btn-warning">
+        <div id="ings-container" class="inputs-container"></div>
+        <div class="alert alert-primary">Старайтесь в начале указывать ключевые ингредиенты</div>
+    </div>
+    <div class="input-group mb-3">
+        <textarea name="description" class="form-control" id="description" cols="100" rows="10" placeholder="Шаги приготовления"></textarea>
+        <div class="alert alert-warning" style="margin-left: 10px;">Пожалуйста, пишите каждый этап с новой строки</div>
+    </div>
+    <div>
+        <input type="file" class="form-control" name="new-recipe-image" id="new-recipe-image" accept=".jpg, .png">
+        <div class="alert alert-primary">Прикрепляйте фото в хорошем разрешении</div>
+    </div>
+    <div style="border: 0px;"> 
+        <input type="button" style="width: 100%;" class="btn btn-primary" id="create-button" value="Создать рецепт" onclick="createRecipe()">
+    </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
