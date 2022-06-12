@@ -43,6 +43,10 @@ if (document.getElementById("add-recipe-link") !== null){
     document.getElementById("add-recipe-link").setAttribute("href", `/main/newRecipe?token=${getToken()}`)
 }
 
+if (document.getElementById("service-name") !== null){
+    document.getElementById("service-name").setAttribute("href", `/main?token=${getToken()}`);
+}
+
 if (document.getElementById("liked-link") !== null){
     document.getElementById("liked-link").setAttribute("href", `/main/liked?token=${getToken()}`)
 }
@@ -52,7 +56,7 @@ if (document.getElementById("best-link") !== null){
 }
 
 if (document.getElementById("moderate-link") !== null){
-    document.getElementById("moderate-link").setAttribute("href", `/main/moderate?token=${getToken()}`);
+    document.getElementById("moderate-link").setAttribute("href", `/moderate?token=${getToken()}`);
 }
 
 if (document.getElementById("users-link") !== null){
@@ -66,7 +70,12 @@ if (document.getElementById("index-link") !== null){
 
 ///////////////////////////////////////////////////////////////////////////////
 
-
+/**
+ * Load a result of response on grid container
+ * @param {Object} response 
+ * @param {HTMLElement} container 
+ * @param {String} from 
+ */
 function loadOnGrid(response, container, from){
     container.innerHTML = "";
     if (response.status === "SUCCESS"){
@@ -108,7 +117,13 @@ function loadOnGrid(response, container, from){
     }
 }
 
-function loadOnTable(response, table, from){
+/**
+ * Load a result of response on table container
+ * @param {Object} response 
+ * @param {HTMLElement} table 
+ * @param {String} from 
+ */
+function loadOnTable(response, table, from="main", renderAdminBtn=true){
     table.innerHTML = "";
     if (response.status == "SUCCESS"){
         let recipes = response.result;
@@ -116,13 +131,70 @@ function loadOnTable(response, table, from){
         table.innerHTML += "<tr><td>Название</td><td>Ник автора</td><td>Описание</td><td>Кол-во просмотров</td><td>Кол-во лайков</td><td>Кол-во комментариев</td><td>Действия</td></tr>"
         
         for(let i = 0; i < recipes.length; i++){
-            table.innerHTML += `<tr id="row_${recipes[i].id}"><td>${recipes[i].name}</td><td>${recipes[i].creatorName}</td><td>${JSON.parse(recipes[i].data).previewText}</td><td>${recipes[i].views}</td><td>${recipes[i].likes}</td><td>${recipes[i].comments}</td><td><a href="/recipe?token=${getToken()}&recipeName=${recipes[i].name}&from=${from}"><div class="btn btn-primary">Страница рецепта</div></a>${(isAdmin()) ? ('<div class="btn btn-danger" onclick="' + deleteRecipe(recipes[i].id) + '">Удалить рецепт</div>') : ""}</td></tr>`
+            table.innerHTML += `<tr id="row_${recipes[i].id}"><td>${recipes[i].name}</td><td><a href="/user?token=${getToken()}&username=${recipes[i].creatorName}">${recipes[i].creatorName}</a></td><td>${JSON.parse(recipes[i].data).previewText}</td><td>${recipes[i].views}</td><td>${recipes[i].likes}</td><td>${recipes[i].comments}</td><td><a href="/recipe?token=${getToken()}&recipeName=${recipes[i].name}&from=${from}"><div class="btn btn-primary">Страница рецепта</div></a>${(isAdmin() && renderAdminBtn) ? (`<div class="btn btn-danger" onclick=" deleteRecipeById(${recipes[i].id}, 'best')">Удалить рецепт</div>`) : ""}</td></tr>`
         }
     }
     else{
         table.innerHTML = "<h2>Ошибка при загрузке результата</h2>";
     }
 }
+
+
+/**
+ * Load a result of response on grid container for moderation
+ * @param {Object} response 
+ * @param {HTMLElement} table 
+ */
+function loadOnTableForModeration(response, table){
+    table.innerHTML = "";
+    if (response.status === "SUCCESS"){
+        let recipes = response.result;
+
+        table.innerHTML += "<tr><td>Название</td><td>Ник автора</td><td>Описание</td><td>Кол-во просмотров</td><td>Кол-во лайков</td><td>Кол-во комментариев</td><td>Действия</td></tr>";
+
+        for (let i = 0; i < recipes.length; i++){
+            table.innerHTML += `<tr id="row_${recipes[i].id}"><td>${recipes[i].name}</td><td><a href="/user?token=${getToken()}&username=${recipes[i].creatorName}">${recipes[i].creatorName}</a></td><td>${JSON.parse(recipes[i].data).previewText}</td><td>${recipes[i].views}</td><td>${recipes[i].likes}</td><td>${recipes[i].comments}</td><td><div class="btn btn-primary" style="cursor: pointer;" onclick="commitRecipeById(${recipes[i].id})">Подтвердить рецепт</div><a href="/updateRecipe?token=${getToken()}&recipeName=${recipes[i].name}"><div class="btn btn-warning">Редактировать</div></a><div class="btn btn-danger" style="cursor: pointer;" onclick="deleteRecipeById(${recipes[i].id})">Удалить рецепт</div></td></tr>`
+        }
+    }
+}
+
+function loadProfileLikedRecipes(){
+
+    let table = document.getElementById("content-table");
+    let sortBy = document.getElementById("sortBy").value;
+
+    $.ajax({
+        type: "post",
+        url: "/loadLiked",
+        data: "sortBy=" + sortBy + "&username=" + getProfileUsername(),
+
+        success: function (response) {
+            loadOnTable(response, table, renderAdminBtn=false);
+        },
+        error: function (e){
+            console.log(e);
+        }
+    });
+}
+
+function loadAdded(){
+    let sortBy = document.getElementById("sortBy").value;
+    let table = document.getElementById("content-table-2");
+
+    $.ajax({
+        type: "post",
+        url: "/loadAdded",
+        data: "sortBy=" + sortBy + "&username=" + getProfileUsername(),
+
+        success: function (response){
+            loadOnTable(response, table, renderAdminBtn=false);
+        },
+        error: function (e){
+            console.log(e);
+        }
+    });
+}
+
 
 let form = document.getElementById("search-form");
 
@@ -151,23 +223,10 @@ if (form !== null){
 //////////////////////////////////////////////////////////////////////////
 
 
-function deleteRecipe(id){
-    $.ajax({
-        type: "post",
-        url: "/deleteRecipe",
-        data: "id=" + id,
-        success: function (response){
-            if (response.status == "SUCCESS"){
-                document.getElementById(`row_${id}`).remove();
-            }
-        },
-        error: function (e){
-            console.log(e);
-        }
-    });
-}
 
-
+/**
+ * Load best recipes on container with sortBy
+ */
 function loadBest(){
     let sortBy = document.getElementById("sortBy").value;
     $.ajax({
@@ -184,6 +243,11 @@ function loadBest(){
     });
 }
 
+/**
+ * 
+ * @param {String} recipe_name 
+ * @param {String} counter_id 
+ */
 function incrementLike(recipe_name, counter_id){
     $.ajax({
         type: "post",
@@ -200,6 +264,11 @@ function incrementLike(recipe_name, counter_id){
     })
 }
 
+/**
+ * 
+ * @param {String} recipe_name 
+ * @param {String} counter_id 
+ */
 function decrementLike(recipe_name, counter_id){
     $.ajax({
         type: "post",
@@ -216,6 +285,9 @@ function decrementLike(recipe_name, counter_id){
     })
 }
 
+/**
+ * Load recipes, liked by current user
+ */
 function loadLiked(){
     let sortBy = document.getElementById("sortBy").value;
 
@@ -235,6 +307,10 @@ function loadLiked(){
 
 }
 
+/**
+ * Switch like condition
+ * @param {HTMLElement} el 
+ */
 function like(el){
     let parsed_id = Number(el.id.split("_")[3]);
 
@@ -261,6 +337,10 @@ function like(el){
     }
 }
 
+/**
+ * 
+ * @param {HTMLElement[]} elements 
+ */
 function appendClassNames(elements){
     const attributes = ["recipe-text-header", "recipe-text", "recipe-steps-header", "recipe-steps"];
 
@@ -273,6 +353,9 @@ function appendClassNames(elements){
     });
 }
 
+/**
+ * Add tag input on newRecipe page
+ */
 function addTagInput(){
     let container = document.getElementById("tags-container");
 
@@ -306,11 +389,18 @@ function addTagInput(){
     }
 }
 
+/**
+ * Delete tag input on newRecipe page
+ * @param {HTMLElement} element 
+ */
 function deleteTagInput(element){
     let id = element.id.split('_')[1];
     document.getElementById(`tag-block_${id}`).remove();
 }
 
+/**
+ * Add ingredient input on newRecipe page
+ */
 function addIngInput(){
     let container = document.getElementById("ings-container");
 
@@ -319,8 +409,9 @@ function addIngInput(){
                                    <div class="input-group mb-3">
                                         <div class="input-group-prepend"><span class="input-group-text">Ингредиент</span></div>
                                         <input type="text" class="ing-name form-control" placeholder="Название" id="ing-block-text_0">
-                                        <input type="text" class="ing-amount form-control" placeholder="Кол-во">
-                                        <input type="button" value="X" class="btn btn-danger" style="margin: 0;" id="ing-block-del_0" onclick="deleteIngInput(this)">
+                                        <input type="text" id="ing-block-amount_0" class="ing-amount form-control" placeholder="Кол-во">
+                                        <div class="input-group-append">
+                                        <input type="button" value="X" class="btn btn-danger" style="margin: 0;" id="ing-block-del_0" onclick="deleteIngInput(this)"></div>
                                     </div>
                                </div>`
     }
@@ -344,40 +435,82 @@ function addIngInput(){
         element.innerHTML = `<div class="input-group mb-3">
         <div class="input-group-prepend"><span class="input-group-text">Ингредиент</span></div>
         <input type="text" class="ing-name form-control" placeholder="Название" id="ing-block-text_${free_id}">
-        <input type="text" class="ing-amount form-control" placeholder="Кол-во">
-        <input type="button" class="btn btn-danger" style="margin: 0;" value="X" id="ing-block-del_${free_id}" onclick="deleteIngInput(this)">
+        <input type="text" id="ing-block-amount_${free_id}" class="ing-amount form-control" placeholder="Кол-во">
+        <div class="input-group-append">
+        <input type="button" class="btn btn-danger" style="margin: 0;" value="X" id="ing-block-del_${free_id}" onclick="deleteIngInput(this)"></div>
         </div>`
         container.append(element);
     }
 }
 
+/**
+ * Delete ingredient input on newRecipe page
+ * @param {HTMLElement} element 
+ */
 function deleteIngInput(element){
     let id = element.id.split('_')[1];
     document.getElementById(`ing-block_${id}`).remove();
 }
 
-function createRecipe(){
-    let name = document.getElementById("new-recipe-name").value;
+function checkPhotoState(){
+    let pinnedPhoto = document.getElementById("new-recipe-image").files[0];
 
-    let short_desc = document.getElementById("short-description").value;
+    let oldPhoto = document.getElementById("old-image");
+
+    if (oldPhoto === null && pinnedPhoto !== undefined) return false;
+
+    if (oldPhoto !== null && oldPhoto.hasAttribute("src")) return false;
+
+    return true;
+}
+
+/**
+ * 
+ * @returns
+ */
+function generateRecipeDataForm(){
+
+    let name = document.getElementById("new-recipe-name").value.trim();
+
+    let short_desc = document.getElementById("short-description").value.trim();
 
     let tags_fields = document.querySelectorAll(".tag-field");
-    let tags = Array.from(tags_fields).map(el => el.value);
+    let tags = Array.from(tags_fields).map(el => el.value.trim());
 
     let ings_names_fields = document.querySelectorAll(".ing-name");
-    let ings_names = Array.from(ings_names_fields).map(el => el.value);
+    let ings_names = Array.from(ings_names_fields).map(el => el.value.trim());
 
     let ings_amounts_fields = document.querySelectorAll(".ing-amount");
-    let ings_amounts = Array.from(ings_amounts_fields).map(el => el.value);
+    let ings_amounts = Array.from(ings_amounts_fields).map(el => el.value.trim());
 
-    let description = document.getElementById("description").value;
+    let description = document.getElementById("description").value.trim();
 
     let photo = document.getElementById("new-recipe-image").files[0];
 
-    if (name === "" || short_desc === "" || description === "" || photo.value !== undefined || tags.includes("") || ings_names.includes("") || ings_amounts.includes("")){
+    if (tags_fields.length === 0 || ings_names_fields.length === 0 || ings_amounts_fields.length === 0){
+        createToast("Рецепт должен содержать теги и ингредиенты", "red");
+    }
+
+    if (name === "" || short_desc === "" || description === "" || checkPhotoState() || tags.includes("") || ings_names.includes("") || ings_amounts.includes("")){
         createToast("Необходимо заполнить все поля", "red");
         return;
     }
+
+
+    if (photo !== undefined){
+        if (photo.size >= 1000000){
+            createToast("Файл слишком большой", "red");
+            return;
+        }
+
+        if (!(photo.type.split("/")[1] === "jpeg" || photo.type.split("/")[1] === "png")){
+            createToast("Разрешены файлы формата jpg и png", "red");
+            return;
+        }
+    }
+   
+    
+    
 
     let ings = new Map();
 
@@ -385,20 +518,253 @@ function createRecipe(){
         ings.set(ings_names[i], ings_amounts[i]);
     }
 
-    console.log(name, tags, ings, description, photo);
+    let form = new FormData();
+
+    let userName = "";
+
+    if (document.getElementById("creator-name") !== null){
+        userName = document.getElementById("creator-name").value;
+    }
+
+    let oldRecipeName = null;
+
+    try{
+        oldRecipeName = getRecipeName();
+    } 
+    catch (e){
+
+    }
+
+    form.append("name", name);
+    form.append("shortDescription", short_desc);
+    form.append("tags", JSON.stringify(tags));
+    form.append("ingredients", JSON.stringify(Object.fromEntries(ings)));
+    form.append("description", description);
+    form.append("recipeImage", (photo !== undefined) ? photo : (new File([], "plug")));
+    form.append("creatorName", (userName === "") ? getUsername() : userName);
+    form.append("updatePhoto", (photo === undefined) ? false : true);
+    form.append("recipeOldName", oldRecipeName);
+
+    for (let el of form.entries()){
+        console.log(el[0] + " - " + el[1]);
+    }
+
+    return form;
 }
 
-function createToast(message, color="yellow") {
+/**
+ * Generate new form, which represented data and sent it to server
+ */
+function createRecipe(){
+    let form = generateRecipeDataForm();
+    if (form === undefined){
+        return;
+    }
+
+    $.ajax({
+        type: "post",
+        url: "/createRecipe",
+        contentType: false,
+        processData: false,
+        cache: false,
+        data: form,
+
+        success: function (response){
+            if (response.status === "SUCCESS"){
+                createToast("Рецепт успешно создан и отправлен на модерацию. Если он будет одобрен, то он появится на сайте.", "green", 4000);
+            }
+            else{
+                createToast(response.result, "red");
+            }
+        },
+        error: function (e){
+            console.log(e)
+        }
+    });
+}
+
+/**
+ * Confirm recipe data and mark it ready for usage
+ * @param {Number} id 
+ * @param {String} block_prefix 
+ */
+function commitRecipeById(id){
+    $.ajax({
+        type: "post",
+        url: "/commitRecipeById",
+        data: "recipeId=" + id,
+        
+        success: function (response){
+            if (response.status === "SUCCESS"){
+                createToast("Рецепт подтвержден. Теперь он будет отображаться в поиске.", "green");
+                setTimeout(() => window.location.href = "/moderate?token=" + getToken(), 2000);
+            }
+            else{
+                createToast(response.result, "red");
+            }
+        },
+        error: function (e){
+            console.log(e);
+        }
+    });
+}
+
+function commitRecipeByName(recipeName){
+    $.ajax({
+        type: "post",
+        url: "/commitRecipeByName",
+        data: "recipeName=" + recipeName,
+
+        success: function (response){
+            if (response.status === "SUCCESS"){
+                createToast("Рецепт подтвержден. Теперь он будет отображаться в поиске.", "green");
+                setTimeout(() => window.location.href = "/moderate?token=" + getToken(), 2000);   
+            }
+            else{
+                createToast(response.result, "red");
+            }
+        },
+        error: function (e){
+            console.log(e);
+        }
+    });
+}
+
+function saveRecipeUpdates(){
+    
+    let form = generateRecipeDataForm();
+    if (form === undefined){
+        return;
+    }
+
+    $.ajax({
+        type: "post",
+        url: "/saveRecipeUpdates",
+        contentType: false,
+        processData: false,
+        cache: false,
+        data: form,
+
+        success: function (response){
+            if (response.status === "SUCCESS"){
+                createToast("Данные рецепта успешно обновлены.", "green");
+            }
+            else{
+                createToast(response.result, "red");
+            }
+        },
+        error: function (e){
+            console.log(e);
+        }
+        
+    });
+}
+
+/**
+ * Delete recipe with id
+ * @param {Number} recipeId 
+ */
+ function deleteRecipeById(recipeId, to="moderate"){
+    $.ajax({
+        type: "post",
+        url: "/deleteRecipeById",
+        data: "recipeId=" + recipeId,
+        success: function (response){
+            if (response.status == "SUCCESS"){
+                createToast("Рецепт успешно удален", "green");
+                setTimeout(() => window.location.href = `/${to}?token=` + getToken(), 2000);
+            }
+            else{
+                createToast(response.result, "red");
+            }
+        },
+        error: function (e){
+            console.log(e);
+        }
+    });
+}
+
+function deleteRecipeByName(recipeName){
+    $.ajax({
+        type: "post",
+        url: "/deleteRecipeByName",
+        data: "recipeName=" + recipeName,
+
+        success: function (response){
+            if (response.status == "SUCCESS"){
+                createToast("Рецепт успешно удален", "green");
+                setTimeout(() => window.location.href = "/moderate?token=" + getToken(), 2000);
+            }
+            else{
+                createToast(response.result, "red");
+            }
+        },
+        error: function (e){
+            console.log(e);
+        }
+    });
+}
+
+/**
+ * Create an notification in top left corner of screen
+ * @param {String} message 
+ * @param {String} color 
+ * @param {Number} delay 
+ */
+function createToast(message, color="yellow", delay=2000) {
     let toast = document.createElement("div");
 
-    let number = document.querySelectorAll(".toast").length;
+    let number = document.querySelectorAll(".toast-alert").length;
 
-    toast.className = "alert";
+    toast.className = "toast-alert";
     toast.id = "toast_" + number;
     toast.style = `width: max-content; height: max-content; font-size: 15pt; position: fixed; top: 30px; left: 30px; z-index: 1050; background-color: ${color}; padding: 20px; opacity: 0.7`;
     toast.innerHTML = message;
     document.querySelector("body").append(toast);
     setTimeout(() => {
         document.getElementById(toast.id).remove();
-    }, 2000);
+    }, delay);
+}
+
+function banUser(){
+    let username = getProfileUsername();
+
+    $.ajax({
+        type: "post",
+        url: "/banUser",
+        data: "username=" + username,
+
+        success: function (response) {
+            if (response.status === "SUCCESS"){
+                createToast("Пользователь успешно забанен", "yellow");
+                setTimeout(() => window.location.href = `/user?token=${getToken()}&username=${username}`, 2000);
+            }
+            else{
+                createToast("Ошибка бана пользователя", "red");
+            }
+        },
+        error: function (e){
+            console.log(e);
+        }
+    });
+}
+
+function unbanUser(){
+    let username = getProfileUsername();
+
+    $.ajax({
+        type: "post",
+        url: "/unbanUser",
+        data: "username=" + username,
+
+        success: function (response) {
+            if (response.status === "SUCCESS"){
+                createToast("Пользователь успешно разбанен");
+                setTimeout(() => window.location.href = `/user?token=${getToken()}&username=${username}`, 2000);
+            }
+            else{
+                createToast("Ошибка разбана пользователя", "red");
+            }
+        }
+    });
 }

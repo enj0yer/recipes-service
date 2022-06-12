@@ -34,6 +34,9 @@ public class User {
     @Column(nullable = false, columnDefinition = "boolean default false")
     protected boolean isAdmin;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    protected boolean isBanned;
+
 
     public User(String username, String email, String phoneNumber, String gender, Integer age, String password) {
         this.username = username;
@@ -61,6 +64,14 @@ public class User {
 
     public void setUsername(String name) {
         this.username = name;
+    }
+
+    public boolean isBanned() {
+        return isBanned;
+    }
+
+    public void setBanned(boolean banned) {
+        isBanned = banned;
     }
 
     public String getEmail() {

@@ -76,6 +76,9 @@ public class BeforeAuthController {
         if (checkEmptyString(username, password) || !validateUser(username, password)){
             modelAndView.setViewName("redirect:/login");
             modelAndView.addObject("isValid", false);
+            User user = userRepository.findByUsername(username);
+
+            if (user.isBanned()) modelAndView.addObject("info", "Ваша учетная запись была заблокирована");
         }
         else{
             Session currSession = sessionRepository.findByUsername(username);

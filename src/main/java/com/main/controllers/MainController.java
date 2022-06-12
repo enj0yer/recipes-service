@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.xml.ws.Service;
+
 
 @Controller
 public class MainController {
@@ -151,9 +153,14 @@ public class MainController {
             return modelAndView;
         }
         else{
-            recipeRepository.increaseViews(recipe.getId());
-            modelAndView.addObject("recipeName", recipeName);
-            modelAndView.addObject("from", from);
+            if (recipe.getModerated()){
+                modelAndView.setViewName("redirect:/main?token=" + token);
+            }
+            else{
+                recipeRepository.increaseViews(recipe.getId());
+                modelAndView.addObject("recipeName", recipeName);
+                modelAndView.addObject("from", from);
+            }
         }
 
         if (token != null){
@@ -169,22 +176,122 @@ public class MainController {
         return modelAndView;
     }
 
-    @GetMapping
-    public ModelAndView userList(@RequestParam(required = false, name = "token") String token){
-        ModelAndView modelAndView = new ModelAndView("best");
+    @GetMapping("/moderate")
+    public ModelAndView moderate(@RequestParam(required = false, name = "token") String token){
+        ModelAndView modelAndView = new ModelAndView("moderate");
+
         if (token != null){
             Session session = sessionRepository.findByToken(token);
 
             if (session != null){
                 Boolean isAdmin = userRepository.findByUsername(session.getUsername()).isAdmin();
-
                 modelAndView.addObject("username", session.getUsername());
                 modelAndView.addObject("token", session.getToken());
                 modelAndView.addObject("isAdmin", isAdmin);
 
-                if (isAdmin == false){
-                    modelAndView.setViewName("redirect:/main?token=" + token);
+                if (!isAdmin){
+                    modelAndView.setViewName("redirect:main?token" + token);
                 }
+            }
+        }
+        else{
+            modelAndView.setViewName("redirect:/login");
+        }
+
+        return modelAndView;
+    }
+
+    @GetMapping("/updateRecipe")
+    public ModelAndView updateRecipe(@RequestParam(required = false, name = "token") String token,
+                                     @RequestParam(required = false, name = "recipeName") String recipeName){
+
+        ModelAndView modelAndView = new ModelAndView("updateRecipe");
+
+        if (token != null){
+            Session session = sessionRepository.findByToken(token);
+
+            if (session != null){
+                Boolean isAdmin = userRepository.findByUsername(session.getUsername()).isAdmin();
+                modelAndView.addObject("username", session.getUsername());
+                modelAndView.addObject("token", session.getToken());
+                modelAndView.addObject("isAdmin", isAdmin);
+
+                if (!isAdmin){
+                    modelAndView.setViewName("redirect:/main?token" + token);
+                }
+
+                Recipe recipe = recipeRepository.findByName(recipeName);
+                if (recipe != null) {
+                    modelAndView.addObject("recipeName", recipeName);
+                }
+                else{
+                    modelAndView.setViewName("redirect:/moderate?token=" + token);
+                }
+            }
+        }
+        else{
+            modelAndView.setViewName("redirect:/login");
+        }
+
+        return modelAndView;
+
+    }
+
+    @GetMapping("/user")
+    public ModelAndView userPage(@RequestParam(required = false, name = "token") String token,
+                                 @RequestParam(required = false, name = "username") String username){
+
+        ModelAndView modelAndView = new ModelAndView();
+
+        User user = userRepository.findByUsername(username);
+
+        if (user == null){
+            if (token == null){
+                modelAndView.setViewName("redirect:/");
+            }
+            else {
+                modelAndView.setViewName("redirect:/main?token=" + token);
+            }
+            return modelAndView;
+        }
+        else{
+            modelAndView.addObject("profileUsername", user.getUsername());
+        }
+
+        if (token != null){
+            Session session = sessionRepository.findByToken(token);
+
+            if (session != null){
+                Boolean isAdmin = userRepository.findByUsername(session.getUsername()).isAdmin();
+                modelAndView.addObject("username", session.getUsername());
+                modelAndView.addObject("token", session.getToken());
+                modelAndView.addObject("isAdmin", isAdmin);
+                modelAndView.addObject("isBanned", user.isBanned());
+                modelAndView.setViewName("user");
+            }
+            else{
+                modelAndView.setViewName("redirect:/login");
+            }
+        }
+        return modelAndView;
+    }
+
+    @GetMapping("/userList")
+    public ModelAndView userList(@RequestParam(required = false, name = "token") String token){
+
+        ModelAndView modelAndView = new ModelAndView();
+        if (token == null){
+            modelAndView.setViewName("redirect:/login");
+        }
+        else{
+            Session session = sessionRepository.findByToken(token);
+
+            if (session != null){
+                Boolean isAdmin = userRepository.findByUsername(session.getUsername()).isAdmin();
+                modelAndView.addObject("username", session.getUsername());
+                modelAndView.addObject("token", session.getToken());
+                modelAndView.addObject("isAdmin", isAdmin);
+                modelAndView.setViewName("userList");
             }
             else{
                 modelAndView.setViewName("redirect:/login");

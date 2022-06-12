@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
    <link rel="stylesheet" href="/css/Site.css">
-    <title>Recipe Description</title>
+    <title>Рецепт</title>
 </head>
 <body>
    <header id="header">
@@ -48,16 +48,29 @@
                 container.innerHTML = "";
                 container.innerHTML += `
                     <img src="../img/${data.imageName}"><br>
-                    <h1>${recipe.name}</h1><br>
-                    <h3>${recipe.creatorName}</h3><br>
+                    <h1>${recipe.name}</h4><br>
+                    <h4>Имя создателя - <a href="/user?token=${getToken()}&username=${recipe.creatorName}">${recipe.creatorName}</a></h4><br>
+                    <div class="btn btn-outline-danger" onclick="deleteRecipeByName('${recipe.name}')">Удалить рецепт</div>
                     <div style="display: flex; width: 700px; justify-content: space-between">
                         <p style="width:max-content">Просмотры - ${recipe.views}</p>
                         <p style="width:max-content">Лайки - ${recipe.likes}</p>
                         <p style="width:max-content">Комментарии - ${recipe.comments}</p>
                     </div>
-                    ${data.recipe}
-                    ${data.description}
                 `;
+                let ingredients = JSON.parse(data.ingredients);
+                let ing_keys = Object.keys(ingredients);
+                container.innerHTML += "<h2>Ингредиенты</h2>";
+                for(let key of ing_keys){
+                    container.innerHTML += `<br><p>${key} - ${ingredients[key]}</p>`;
+                }
+                let parsedSteps = data.description.split("\\");
+
+                container.innerHTML += "<h2>Шаги приготовления</h2>";
+
+                for (let i = 0; i < parsedSteps.length; i++){
+                    container.innerHTML += `<br><h3>Шаг ${i + 1}</h3><br><p>${parsedSteps[i]}</p><br>`;
+                }
+
             }
             else{
                 container.innerHTML = `Не удалось загрузить рецепт "${getRecipeName()}"`;
