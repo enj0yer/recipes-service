@@ -288,15 +288,46 @@ public class MainController {
 
             if (session != null){
                 Boolean isAdmin = userRepository.findByUsername(session.getUsername()).isAdmin();
+                if (isAdmin){
+                    modelAndView.setViewName("userList");
+                }
+                else{
+                    modelAndView.setViewName("redirect:/main?token=" + token);
+                }
                 modelAndView.addObject("username", session.getUsername());
                 modelAndView.addObject("token", session.getToken());
                 modelAndView.addObject("isAdmin", isAdmin);
-                modelAndView.setViewName("userList");
+
             }
             else{
                 modelAndView.setViewName("redirect:/login");
             }
         }
+        return modelAndView;
+    }
+
+    @GetMapping("/ingredientsSearch")
+    public ModelAndView ingredientsSearch(@RequestParam(required = false, name = "token") String token){
+
+        ModelAndView modelAndView = new ModelAndView();
+        if (token == null){
+            modelAndView.setViewName("redirect:/login");
+        }
+        else{
+            Session session = sessionRepository.findByToken(token);
+
+            if (session != null){
+                User user = userRepository.findByUsername(session.getUsername());
+                modelAndView.setViewName("ingredientsSearch");
+                modelAndView.addObject("username", session.getUsername());
+                modelAndView.addObject("token", token);
+                modelAndView.addObject("isAdmin", user.isAdmin());
+            }
+            else{
+                modelAndView.setViewName("redirect:/login");
+            }
+        }
+
         return modelAndView;
     }
 }

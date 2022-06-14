@@ -15,9 +15,11 @@
 
    <div style="display: flex; min-width: 500px;">
         <h1 id="profile-username"></h1>
-        
-        <div th:if="${isBanned}" class="btn btn-outline-danger" style="cursor: pointer;" id="unban-user">Разбанить пользователя</div>
-        <div th:unless="${isBanned}" class="btn btn-outline-danger" style="cursor: pointer;" id="ban-user">Забанить пользователя</div>
+        <div th:if="${isAdmin}">
+            <div th:if="${isBanned}" class="btn btn-outline-danger" style="cursor: pointer;" id="unban-user">Разбанить пользователя</div>
+            <div th:unless="${isBanned}" class="btn btn-outline-danger" style="cursor: pointer;" id="ban-user">Забанить пользователя</div>
+        </div>
+
     </div>
     <div th:if="${isBanned}">
         <h2>Пользователь забанен</h2>

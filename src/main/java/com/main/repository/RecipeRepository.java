@@ -39,13 +39,19 @@ public interface RecipeRepository extends JpaRepository<Recipe, Integer>{
     @Procedure("set_moderated_state")
     void setModeratedState(Integer id, Boolean state);
 
-    @Query("from recipes where creator_name = ?1 order by likes desc")
+    @Query("from recipes where creator_name = ?1 and is_moderated = 0 order by likes desc")
     List<Recipe> findByCreatorNameSortByLikes(String creatorName);
 
-    @Query("from recipes where creator_name = ?1 order by views desc")
+    @Query("from recipes where creator_name = ?1 and is_moderated = 0 order by views desc")
     List<Recipe> findByCreatorNameSortByViews(String creatorName);
 
-    @Query("from recipes where creator_name = ?1 order by comments desc")
+    @Query("from recipes where creator_name = ?1 and is_moderated = 0 order by comments desc")
     List<Recipe> findByCreatorNameSortByComments(String creatorName);
+
+    @Procedure("increase_comments")
+    void increaseComments(Integer recipeId);
+
+    @Procedure("decrease_comments")
+    void decreaseComments(Integer recipeId);
 
 }

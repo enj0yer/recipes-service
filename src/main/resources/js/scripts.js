@@ -60,7 +60,7 @@ if (document.getElementById("moderate-link") !== null){
 }
 
 if (document.getElementById("users-link") !== null){
-    document.getElementById("users-link").setAttribute("href", `/main/users?token=${getToken()}`);
+    document.getElementById("users-link").setAttribute("href", `/userList?token=${getToken()}`);
 }
 
 if (document.getElementById("index-link") !== null){
@@ -95,7 +95,7 @@ function loadOnGrid(response, container, from){
             <br>
             <div class="recipe-footer">
             <div class="recipe-views"><img src="/source/views-icon.png" width="30" style="opacipy: 0.7">${response.result[i].views}</div>
-                <div class="recipe-likes-container" onclick="like(this)" id="recipe_likes_container_${i}">
+                <div class="recipe-likes-container" ${(getToken() === null) ? "" : 'onclick="like(this)"'} id="recipe_likes_container_${i}">
                     <div class="recipe-likes-counter" id="recipe_likes_counter_${i}">${response.result[i].likes}</div>
                     ${(response.result[i].liked)
                         ? `<div class="recipe-star-switcher" id="recipe_star_switcher_${i}" active><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-star-fill" viewBox="0 0 13 19">
@@ -204,17 +204,17 @@ if (form !== null){
         let searchString = document.getElementById("search-field").value.trim();
         if (searchString.length > 0){
             $.ajax({
-            type: "POST",
-            url: "/main",
-            data: "username=" + username + "&" + "search=" + searchString,
-            success: function(response){
-                let container = document.getElementById("content-container");
-                loadOnGrid(response, container, "main");
-            },
-            error: function(e) {
-                console.log(e);
-            }
-        })
+                type: "post",
+                url: "/main",
+                data: "username=" + username + "&" + "search=" + searchString,
+                success: function(response){
+                    let container = document.getElementById("content-container");
+                    loadOnGrid(response, container, "main");
+                },
+                error: function(e) {
+                    console.log(e);
+                }
+            });
         }
     });
 }
@@ -312,6 +312,9 @@ function loadLiked(){
  * @param {HTMLElement} el 
  */
 function like(el){
+    if (getToken() === null){
+        window.location.href = "/login";
+    }
     let parsed_id = Number(el.id.split("_")[3]);
 
     let star = document.getElementById(`recipe_star_switcher_${parsed_id}`);
@@ -401,15 +404,14 @@ function deleteTagInput(element){
 /**
  * Add ingredient input on newRecipe page
  */
-function addIngInput(){
+function addIngInput(full=true){
     let container = document.getElementById("ings-container");
 
     if (container.innerHTML === ""){
         container.innerHTML = `<div id="ing-block_0" class="ing-block">
                                    <div class="input-group mb-3">
                                         <div class="input-group-prepend"><span class="input-group-text">Ингредиент</span></div>
-                                        <input type="text" class="ing-name form-control" placeholder="Название" id="ing-block-text_0">
-                                        <input type="text" id="ing-block-amount_0" class="ing-amount form-control" placeholder="Кол-во">
+                                        <input type="text" class="ing-name form-control" placeholder="Название" id="ing-block-text_0">${(full) ? `<input type="text" id="ing-block-amount_0" class="ing-amount form-control" placeholder="Кол-во">` : ""}
                                         <div class="input-group-append">
                                         <input type="button" value="X" class="btn btn-danger" style="margin: 0;" id="ing-block-del_0" onclick="deleteIngInput(this)"></div>
                                     </div>
@@ -433,12 +435,11 @@ function addIngInput(){
         element.className = "ing-block";
         element.id = `ing-block_${free_id}`;
         element.innerHTML = `<div class="input-group mb-3">
-        <div class="input-group-prepend"><span class="input-group-text">Ингредиент</span></div>
-        <input type="text" class="ing-name form-control" placeholder="Название" id="ing-block-text_${free_id}">
-        <input type="text" id="ing-block-amount_${free_id}" class="ing-amount form-control" placeholder="Кол-во">
-        <div class="input-group-append">
-        <input type="button" class="btn btn-danger" style="margin: 0;" value="X" id="ing-block-del_${free_id}" onclick="deleteIngInput(this)"></div>
-        </div>`
+                                <div class="input-group-prepend"><span class="input-group-text">Ингредиент</span></div>
+                                <input type="text" class="ing-name form-control" placeholder="Название" id="ing-block-text_${free_id}">${(full) ? `<input type="text" id="ing-block-amount_${free_id}" class="ing-amount form-control" placeholder="Кол-во">` : ""}
+                                <div class="input-group-append">
+                                <input type="button" class="btn btn-danger" style="margin: 0;" value="X" id="ing-block-del_${free_id}" onclick="deleteIngInput(this)"></div>
+                            </div>`
         container.append(element);
     }
 }
@@ -478,7 +479,7 @@ function generateRecipeDataForm(){
     let tags = Array.from(tags_fields).map(el => el.value.trim());
 
     let ings_names_fields = document.querySelectorAll(".ing-name");
-    let ings_names = Array.from(ings_names_fields).map(el => el.value.trim());
+    let ings_names = Array.from(ings_names_fields).map(el => el.value.trim().toLowerCase());
 
     let ings_amounts_fields = document.querySelectorAll(".ing-amount");
     let ings_amounts = Array.from(ings_amounts_fields).map(el => el.value.trim());
@@ -648,6 +649,8 @@ function saveRecipeUpdates(){
         success: function (response){
             if (response.status === "SUCCESS"){
                 createToast("Данные рецепта успешно обновлены.", "green");
+                setTimeout(() => window.location.href = "/moderate?token=" + getToken(), 2000);
+                
             }
             else{
                 createToast(response.result, "red");
@@ -726,8 +729,10 @@ function createToast(message, color="yellow", delay=2000) {
     }, delay);
 }
 
-function banUser(){
-    let username = getProfileUsername();
+function banUser(username=""){
+    if (username === ""){
+        username = getProfileUsername();
+    }
 
     $.ajax({
         type: "post",
@@ -737,7 +742,7 @@ function banUser(){
         success: function (response) {
             if (response.status === "SUCCESS"){
                 createToast("Пользователь успешно забанен", "yellow");
-                setTimeout(() => window.location.href = `/user?token=${getToken()}&username=${username}`, 2000);
+                setTimeout(() => location.reload(), 2000);
             }
             else{
                 createToast("Ошибка бана пользователя", "red");
@@ -749,8 +754,10 @@ function banUser(){
     });
 }
 
-function unbanUser(){
-    let username = getProfileUsername();
+function unbanUser(username=""){
+    if (username === ""){
+        username = getProfileUsername();
+    }
 
     $.ajax({
         type: "post",
@@ -760,10 +767,166 @@ function unbanUser(){
         success: function (response) {
             if (response.status === "SUCCESS"){
                 createToast("Пользователь успешно разбанен");
-                setTimeout(() => window.location.href = `/user?token=${getToken()}&username=${username}`, 2000);
+                setTimeout(() => location.reload(), 2000);
             }
             else{
                 createToast("Ошибка разбана пользователя", "red");
+            }
+        }
+    });
+}
+
+function loadUsers(){
+    let container = document.getElementById("content-table");
+
+    let sortBy = document.getElementById("sortBy").value;
+
+    let filters = new Map();
+    filters.set("username", document.getElementById("username-filter").value.trim());
+
+    filters.set("email", document.getElementById("email-filter").value.trim());
+
+    let jsonFilters = JSON.stringify(Object.fromEntries(filters));
+
+    $.ajax({
+        type: "post",
+        url: "/loadUsers",
+        data: "sortBy=" + sortBy + "&filters=" + jsonFilters,
+
+        success : function (response){
+            if (response.status === "SUCCESS"){
+                container.innerHTML = "";
+
+                let users = response.result;
+
+                container.innerHTML += `<tr>
+                                            <td>Имя пользователя</td>
+                                            <td>Почтовый ящик</td>
+                                            <td>Номер телефона</td>
+                                            <td>Пол</td>
+                                            <td>Возраст</td>
+                                            <td>Действия</td>
+                                        </tr>`
+                
+                for (let i = 0; i < users.length; i++){
+                    container.innerHTML += `<tr>
+                                                <td><a href="/user?token=${getToken()}&username=${users[i].username}">${users[i].username}</a></td>
+                                                <td>${users[i].email}</td>
+                                                <td>${users[i].phoneNumber}</td>
+                                                <td>${users[i].gender}</td>
+                                                <td>${users[i].age}</td>
+                                                <td>
+                                                    <a href="/user?token=${getToken()}&username=${users[i].username}"><div
+                                                    class="btn btn-primary">Страница пользователя</div></a>
+                                                    ${(users[i].banned) ? `<div style="cursor: pointer;" class="btn btn-outline-warning" onclick="unbanUser('${users[i].username}')">Разбанить</div>` : `<div style="cursor: pointer;" class="btn btn-warning" onclick="banUser('${users[i].username}')">Забанить</div>`}
+                                                </td>
+                                            </tr>`
+                }
+            }
+        },
+        error: function (e){
+            console.log(e);
+        }
+    });
+}
+
+function searchByIngredients(){
+    let inputs = document.querySelectorAll(".ing-name");
+    let container = document.getElementById("content-container");
+    let ingredients = Array.from(inputs).map(el => el.value.trim().toLowerCase());
+
+    $.ajax({
+        type: "post",
+        url: "/searchByIngredients",
+        data: "ingredients=" + JSON.stringify(ingredients) + "&username=" + getUsername(),
+
+        success: function (response) {
+            loadOnGrid(response, container);
+        },
+        error: function (e){
+            console.log(e);
+        }
+    });
+}
+
+function deleteComment(id){
+    $.ajax({
+        type: "post",
+        url: "/deleteComment",
+        data: "commentId=" + id,
+
+        success: function (response) {
+            if (response.status === "SUCCESS"){
+                createToast("Комментарий удален", "green", 1000);
+                document.getElementById(`comment_${id}`).remove();
+            }
+            else{
+                createToast(response.result, "red");
+            }
+        },
+        error: function (e) {
+            console.log(e);
+        }
+    });
+}
+
+function loadComments(){
+    let container = document.getElementById("comments-container");
+
+    $.ajax({
+        type: "post",
+        url: "/loadComments",
+        data: "recipeName=" + getRecipeName(),
+
+        success: function (response){
+            container.innerHTML = "";
+
+            if (response.status === "SUCCESS"){
+                let comments = response.result;
+
+                for (let i = 0; i < comments.length; i++){
+                    container.innerHTML += `
+                                            <div class="comment-block" id="comment_${comments[i].id}">
+                                                <div class="comment-header">
+                                                    <div class="comment-id">№${comments[i].id}</div>
+                                                    <a href="/user?token=${getToken()}&username=${comments[i].userName}"><div class="comment-username">${comments[i].userName}</div></a>
+                                                    ${(isAdmin()) ? `<div class="btn btn-danger" onclick="deleteComment(${comments[i].id})">Удалить комментарий</div>` : ""}
+                                                </div>
+                                                <div class="comment-text" id="comment_text_${comments[i].id}">${comments[i].text}</div>
+                                            </div>
+                                            `;
+                }
+            }
+            else{
+                container.innerHTML = "Не удалось загрузить комментарии";
+            }
+
+
+        },
+        error: function (e){
+            console.log(e);
+        }
+    });
+}
+function addComment(){
+    let text = document.getElementById("new-comment-text").value.trim();
+
+    if (text === ""){
+        createToast("Комментарий не может быть пустым", "red", 1000);
+        return;
+    }
+
+    $.ajax({
+        type: "post",
+        url: "/addComment",
+        data: "commentText=" + text + "&username=" + getUsername() + "&recipeName=" + getRecipeName(),
+
+        success: function (response) {
+            if (response.status === "SUCCESS"){
+                loadComments();
+            }
+            else{
+                createToast(response.result, "red", 1000);
             }
         }
     });

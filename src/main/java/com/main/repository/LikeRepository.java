@@ -14,4 +14,6 @@ public interface LikeRepository extends JpaRepository<Like, Integer> {
     @Procedure("delete_like")
     void deleteLike(@Param("recipe_id") Integer recipeId, @Param("user_id") Integer userId);
 
+    @Procedure("delete_all_recipe_likes")
+    void deleteAllRecipeLikes(Integer recipeId);
 }

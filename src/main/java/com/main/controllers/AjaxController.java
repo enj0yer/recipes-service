@@ -3,10 +3,7 @@ package com.main.controllers;
 import com.google.gson.Gson;
 import com.main.AjaxResponse;
 import com.main.models.*;
-import com.main.repository.LikeRepository;
-import com.main.repository.RecipeRepository;
-import com.main.repository.SessionRepository;
-import com.main.repository.UserRepository;
+import com.main.repository.*;
 import net.bytebuddy.utility.RandomString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,14 +11,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
-import org.springframework.web.servlet.ModelAndView;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 public class AjaxController {
@@ -37,6 +33,8 @@ public class AjaxController {
     private LikeRepository likeRepository;
     @Autowired
     private SessionRepository sessionRepository;
+    @Autowired
+    private CommentRepository commentRepository;
 
     private Boolean searchLike(List<Like> likes, int userId, int recipeId){
         for (var like : likes){
@@ -65,11 +63,19 @@ public class AjaxController {
         }
         else{
             User user = userRepository.findByUsername(username);
-            List<Like> likes = likeRepository.findByUserId(user.getId());
+            List<Like> likes;
+            if (user != null)
+                likes = likeRepository.findByUserId(user.getId());
+            else likes = null;
             List<LikedRecipe> likedRecipes = new ArrayList<>();
 
             for(var recipe : recipes){
-                likedRecipes.add(new LikedRecipe(recipe, searchLike(likes, user.getId(), recipe.getId())));
+                if (user == null) {
+                    likedRecipes.add(new LikedRecipe(recipe, false));
+                }
+                else {
+                    likedRecipes.add(new LikedRecipe(recipe, searchLike(likes, user.getId(), recipe.getId())));
+                }
             }
             ajaxResponse.setStatus("SUCCESS");
             ajaxResponse.setResult(likedRecipes);
@@ -134,17 +140,27 @@ public class AjaxController {
     }
 
     @PostMapping("/loadRecipe")
-    public AjaxResponse loadRecipe(@RequestParam("recipeName") String recipeName){
+    public AjaxResponse loadRecipe(@RequestParam("recipeName") String recipeName,
+                                   @RequestParam(value = "username", required = false) String username){
         AjaxResponse ajaxResponse = new AjaxResponse();
 
         Recipe recipe = recipeRepository.findByName(recipeName);
+        User user = userRepository.findByUsername(username);
 
         if (recipe == null){
             ajaxResponse.setStatus("FAIL");
         }
         else{
             ajaxResponse.setStatus("SUCCESS");
-            ajaxResponse.setResult(recipe);
+            LikedRecipe likedRecipe;
+            if (user != null){
+                List<Like> likes = likeRepository.findByUserId(user.getId());
+                likedRecipe = new LikedRecipe(recipe, searchLike(likes, user.getId(), recipe.getId()));
+            }
+            else{
+                likedRecipe = new LikedRecipe(recipe, false);
+            }
+            ajaxResponse.setResult(likedRecipe);
         }
 
         return ajaxResponse;
@@ -309,7 +325,9 @@ public class AjaxController {
         Recipe recipe = recipeRepository.getById(recipeId);
         Gson g = new Gson();
         String imageName = (String) g.fromJson(recipe.getData(), Map.class).get("imageName");
-        recipeRepository.deleteById(recipeId);
+        recipeRepository.deleteById(recipe.getId());
+        likeRepository.deleteAllRecipeLikes(recipe.getId());
+        commentRepository.deleteAllByRecipeId(recipe.getId());
         Files.deleteIfExists(Paths.get(recipesImagesUploadPath + imageName));
         ajaxResponse.setStatus("SUCCESS");
         return ajaxResponse;
@@ -387,5 +405,158 @@ public class AjaxController {
 
         return ajaxResponse;
     }
-    
+
+    @PostMapping("/loadUsers")
+    public AjaxResponse loadUsers(@RequestParam("sortBy") String sortBy,
+                                  @RequestParam("filters") String filters){
+
+        Gson g = new Gson();
+
+
+        Map<String, String> sortFilters = g.fromJson(filters, Map.class);
+
+        for (var key : sortFilters.keySet()){
+            sortFilters.replace(key, sortFilters.get(key) + "%");
+        }
+
+        List<User> result;
+
+        switch (sortBy){
+            case "username":
+                result = userRepository.findAllSortByUsername(sortFilters.get("username"), sortFilters.get("email"));
+                return new AjaxResponse("SUCCESS", result);
+            case "email":
+                result = userRepository.findAllSortByEmail(sortFilters.get("username"), sortFilters.get("email"));
+                return new AjaxResponse("SUCCESS", result);
+            case "phoneNumber":
+                result = userRepository.findAllSortByPhoneNumber(sortFilters.get("username"), sortFilters.get("email"));
+                return new AjaxResponse("SUCCESS", result);
+            default:
+                return new AjaxResponse("FAIL", "Не удалось загрузить данные с сервера");
+        }
+    }
+
+    @PostMapping("/searchByIngredients")
+    public AjaxResponse searchByIngredients(@RequestParam("ingredients") String ingredients,
+                                            @RequestParam("username") String username){
+
+        User user = userRepository.findByUsername(username);
+
+        if (user == null){
+            return new AjaxResponse("FAIL", "Неверные параметры запроса");
+        }
+
+        Gson g = new Gson();
+        List<String> ingredientsList = g.fromJson(ingredients, List.class);
+        List<Recipe> rawRecipes = recipeRepository.findAll();
+        List<Recipe> sortedList = new ArrayList<>();
+
+        Map<Recipe, Integer> freqMap = new HashMap<>();
+
+        for (var rawRecipe : rawRecipes){
+            String[] ings = rawRecipe.getIngredients().split("//");
+
+            for (var ing : ings){
+                ingredientsList.forEach(el -> {
+                    if (el.equals(ing)){
+                        Integer insertValue;
+                        if (freqMap.containsKey(rawRecipe)){
+                            insertValue = freqMap.get(rawRecipe) + 1;
+                        }
+                        else insertValue = 1;
+                        freqMap.put(rawRecipe, insertValue);
+                    }
+                });
+            }
+        }
+
+        Recipe maxFreqRecipe = null;
+        Integer maxFreq = Integer.MIN_VALUE;
+        Integer currValue;
+        while(freqMap.size() > sortedList.size()) {
+            maxFreq = Integer.MIN_VALUE;
+            maxFreqRecipe = null;
+            for (var key : freqMap.keySet()) {
+                currValue = freqMap.get(key);
+                if (currValue > maxFreq && !sortedList.contains(key)) {
+                    maxFreq = currValue;
+                    maxFreqRecipe = key;
+                }
+            }
+            if (!sortedList.contains(maxFreqRecipe)){
+                sortedList.add(maxFreqRecipe);
+            }
+
+        }
+        List<Like> likes = likeRepository.findByUserId(user.getId());
+
+        List<LikedRecipe> likedRecipes = new ArrayList<>();
+
+        for(var recipe : sortedList){
+            likedRecipes.add(new LikedRecipe(recipe, searchLike(likes, user.getId(), recipe.getId())));
+        }
+
+        return new AjaxResponse("SUCCESS", likedRecipes);
+    }
+
+    @PostMapping("/loadComments")
+    public AjaxResponse loadComments(@RequestParam("recipeName") String recipeName){
+
+        Recipe recipe = recipeRepository.findByName(recipeName);
+
+        if (recipe == null) {
+            return new AjaxResponse("FAIL", "Рецепт не найдет");
+        }
+
+        List<Comment> comments = commentRepository.findAllByRecipeId(recipe.getId());
+
+        List<OutComment> outComments = new ArrayList<>();
+
+        for (var comment : comments){
+            outComments.add(new OutComment(comment.getId(), userRepository.getById(comment.getUserId()).getUsername(), comment.getRecipeId(), comment.getText()));
+        }
+
+        return new AjaxResponse("SUCCESS", outComments);
+    }
+
+    @Transactional
+    @PostMapping("/deleteComment")
+    public AjaxResponse deleteComment(@RequestParam("commentId") Integer commentId){
+
+        Comment comment = commentRepository.getById(commentId);
+
+        if (comment == null){
+            return new AjaxResponse("FAIL", "Не удалось удалить комментарий");
+        }
+
+        recipeRepository.decreaseComments(comment.getRecipeId());
+        commentRepository.deleteById(commentId);
+
+
+        return new AjaxResponse("SUCCESS", null);
+    }
+
+    @Transactional
+    @PostMapping("/addComment")
+    public AjaxResponse addComment(@RequestParam("commentText") String commentText,
+                                   @RequestParam("username") String username,
+                                   @RequestParam("recipeName") String recipeName){
+
+        User user = userRepository.findByUsername(username);
+        Recipe recipe = recipeRepository.findByName(recipeName);
+
+        if (user == null){
+            return new AjaxResponse("FAIL", "Пользователь не найден");
+        }
+        if (recipe == null){
+            return new AjaxResponse("FAIL", "Рецепт не найден");
+        }
+
+        Comment comment = new Comment(user.getId(), recipe.getId(), commentText);
+
+        commentRepository.save(comment);
+        recipeRepository.increaseComments(recipe.getId());
+
+        return new AjaxResponse("SUCCESS", null);
+    }
 }

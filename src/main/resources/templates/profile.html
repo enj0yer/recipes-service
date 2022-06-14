@@ -14,15 +14,8 @@
 </header>
 
 <div class="settings-container">
-    <div>
-        <input type="text" class="form-control" id="newUsername" placeholder="Новое имя пользователя">
-        <input type="button" onclick="setUsername()">
-    </div>
-    <div>
-        <label for="">Новое фото профиля</label>
-        <input type="file" class="form-control" id="newPhoto" placeholder="Прикрепить">
-    </div>
-    <div class="btn btn-danger" onclick="logout()">Выйти из аккаунта</div>
+    <a id="userPage" style="width: 800px; margin: 0 auto;"><div class="btn btn-outline-primary" style="width: 800px; margin: 0 auto;">Перейти на личную страницу</div></a>
+    <div class="btn btn-danger" style="width: 800px; margin: 20px auto;" onclick="logout()">Выйти из аккаунта</div>
 </div>
 
 
@@ -39,6 +32,8 @@
     function getToken(){
         return [[${token}]];
     }
+
+    document.getElementById("userPage").setAttribute("href", `/user?token=${getToken()}&username=${getUsername()}`);
 
     function logout(){
         $.ajax({

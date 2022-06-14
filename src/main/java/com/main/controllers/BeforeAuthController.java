@@ -73,29 +73,34 @@ public class BeforeAuthController {
     @PostMapping("/login")
     public ModelAndView loginPost(@RequestParam String username, @RequestParam String password){
         ModelAndView modelAndView = new ModelAndView();
+        User user = userRepository.findByUsername(username);
         if (checkEmptyString(username, password) || !validateUser(username, password)){
             modelAndView.setViewName("redirect:/login");
             modelAndView.addObject("isValid", false);
-            User user = userRepository.findByUsername(username);
+            return modelAndView;
 
-            if (user.isBanned()) modelAndView.addObject("info", "Ваша учетная запись была заблокирована");
+        }
+        else if (user != null){
+            if (user.isBanned()) {
+                modelAndView.addObject("info", "Ваша учетная запись была заблокирована");
+                modelAndView.addObject("isValid", true);
+                return modelAndView;
+            }
+        }
+
+        Session currSession = sessionRepository.findByUsername(username);
+        String token;
+        if (currSession == null){
+            token = BCrypt.gensalt(31);
+            Session session = new Session(username, token);
+            sessionRepository.save(session);
         }
         else{
-            Session currSession = sessionRepository.findByUsername(username);
-            String token;
-            if (currSession == null){
-                token = BCrypt.gensalt(31);
-                Session session = new Session(username, token);
-                sessionRepository.save(session);
-            }
-            else{
-                token = currSession.getToken();
-            }
-            User user = userRepository.findByUsername(username);
-            modelAndView.addObject("token", token);
-            modelAndView.setViewName("redirect:/main");
-
+            token = currSession.getToken();
         }
+        modelAndView.addObject("token", token);
+        modelAndView.setViewName("redirect:/main");
+
         return modelAndView;
     }
 

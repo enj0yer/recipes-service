@@ -151,7 +151,7 @@ public class Recipe {
         List<String> tags = g.fromJson(userRecipe.getTags(), List.class);
 
         for (int i = 0; i < tags.size(); i++){
-            if (i != 0) searchTags.append("\\");
+            if (i != 0) searchTags.append("//");
             searchTags.append(tags.get(i).trim());
         }
         recipe.tags = searchTags.toString();
@@ -164,7 +164,7 @@ public class Recipe {
         StringBuilder searchIngredients = new StringBuilder();
         String[] ingredientsArray = mapIngredients.keySet().toArray(String[]::new);
         for (int i = 0; i < ingredientsArray.length; i++){
-            if (i != 0) searchIngredients.append("\\");
+            if (i != 0) searchIngredients.append("//");
             searchIngredients.append(ingredientsArray[i]);
         }
         recipe.ingredients = searchIngredients.toString();
@@ -180,7 +180,7 @@ public class Recipe {
         //
 
         //Creating String representation of main recipe description
-        String description = userRecipe.getDescription().replace("\n", "\\")
+        String description = userRecipe.getDescription().replace("\n", "//")
                                                         .replace("\r", "");
         //
 

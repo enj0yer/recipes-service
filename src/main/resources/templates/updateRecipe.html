@@ -68,7 +68,7 @@
         <input type="button" style="width: 100%;" class="btn btn-warning" id="change-button" value="Сохранить изменения" onclick="saveRecipeUpdates()">
     </div>
     <div style="border: 0px;">
-        <input type="button" style="width: 100%;" class="btn btn-primary" id="commit-button" value="Подтвердить рецепт" onclick="commitRecipe()">
+        <input type="button" style="width: 100%;" class="btn btn-primary" id="commit-button" value="Подтвердить рецепт" onclick="commitRecipeByName(getRecipeName())">
     </div>
     <div style="border: 0px;">
         <input type="button" style="width: 100%;" class="btn btn-danger" id="delete-button" value="Удалить рецепт" onclick="deleteRecipeByName(getRecipeName())">
@@ -108,7 +108,7 @@
             document.getElementById("creator-name").value = recipe.creatorName;
             document.getElementById("link-to-user").setAttribute("href", `/user?token=${getToken()}&username=${recipe.creatorName}`);
 
-            let parsedTags = recipe.tags.split("\\");
+            let parsedTags = recipe.tags.split("//");
 
             for (let i = 0; i < parsedTags.length; i++){
                 addTagInput();
@@ -125,7 +125,7 @@
                 document.getElementById(`ing-block-amount_${i}`).value = parsedIngredients[keys[i]]
             }
 
-            let parsedSteps = recipeData.description.split("\\");
+            let parsedSteps = recipeData.description.split("//");
 
             document.getElementById("description").value = "";
 

@@ -2,6 +2,7 @@ package com.main.models;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.gson.annotations.Expose;
 
 import javax.persistence.*;
 
@@ -28,6 +29,7 @@ public class User {
     protected Integer age;
 
     @JsonIgnore
+    @Expose(serialize = false)
     @Column(nullable = false)
     protected String password;
 
