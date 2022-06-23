@@ -39,6 +39,10 @@ if (document.getElementById("recipe-back-link") !== null){
     }
 }
 
+if (document.getElementById("ingredients-search-link") !== null){
+    document.getElementById("ingredients-search-link").setAttribute("href", "/ingredientsSearch?token=" + getToken());
+}
+
 if (document.getElementById("add-recipe-link") !== null){
     document.getElementById("add-recipe-link").setAttribute("href", `/main/newRecipe?token=${getToken()}`)
 }

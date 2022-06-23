@@ -17,8 +17,9 @@
 
    <h2>Комментарии</h2>
    <div id="comments-container" style="display: flex; flex-direction: column; justify-content: space-evenly;"></div>
+   
    <input type="text" id="new-comment-text">
-   <input type="button" class="btn btn-outline-primary" value="Добавить комментарий" onclick="addComment()">
+   <input type="button" class="btn btn-outline-primary" id="new-comment-create" value="Добавить комментарий" onclick="addComment()">
 
 <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
@@ -94,10 +95,15 @@
         }
     });
 
+
 </script>
 <script src="/js/scripts.js"></script>
 <script>
     loadComments();
+    if (getToken() === null){
+        document.getElementById("new-comment-text").remove();
+        document.getElementById("new-comment-create").remove();
+    }
 </script>
 </body>
 </html>
